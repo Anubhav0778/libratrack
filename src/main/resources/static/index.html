@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LibraTrack</title>
+<style>
+  :root {
+    --bg: #f5f3ee; --surface: #ffffff; --ink: #1f2933; --muted: #6b7280; --line: #e4e0d6;
+    --brand: #1f4e79; --brand-ink: #ffffff; --accent: #b4532a;
+    --ok: #2f7d4f; --ok-bg: #e5f3ea; --warn: #9a6700; --warn-bg: #fdf0d2; --bad: #b42318; --bad-bg: #fde8e6;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #14181d; --surface: #1d232a; --ink: #e8ebee; --muted: #98a2ad; --line: #2b333c;
+      --brand: #5b9bd5; --brand-ink: #0d1620; --accent: #e0875f;
+      --ok: #6cc08b; --ok-bg: #173324; --warn: #e3b341; --warn-bg: #3a2e0d; --bad: #f0857b; --bad-bg: #3f1b18; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--brand); color: var(--brand-ink); padding: 14px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+  header h1 { margin: 0; font: 600 20px/1.2 Georgia, "Times New Roman", serif; letter-spacing: .3px; }
+  header small { opacity: .8; display: block; font: 12px system-ui, sans-serif; }
+  .clock { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+  .clock b { font-size: 15px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 24px 60px; }
+  nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex-wrap: wrap; }
+  nav button { background: none; border: none; padding: 10px 16px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; }
+  nav button.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+  .actor { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .actor label { color: var(--muted); }
+  select, input { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  button.btn { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--brand); background: var(--brand); color: var(--brand-ink); cursor: pointer; }
+  button.btn.ghost { background: transparent; color: var(--brand); }
+  button.btn.small { padding: 4px 10px; font-size: 13px; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .card .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+  .card .v { font: 600 26px/1.2 Georgia, serif; margin-top: 4px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 600; background: color-mix(in srgb, var(--bg) 60%, var(--surface)); }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--line); }
+  .tag.ok { background: var(--ok-bg); color: var(--ok); }
+  .tag.warn { background: var(--warn-bg); color: var(--warn); }
+  .tag.bad { background: var(--bad-bg); color: var(--bad); }
+  .empty { padding: 28px; text-align: center; color: var(--muted); }
+  .muted { color: var(--muted); }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .toolbar input[type=search] { flex: 1; min-width: 200px; }
+  #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); max-width: 90vw; padding: 12px 18px; border-radius: 10px; font-weight: 500; box-shadow: 0 6px 24px rgba(0,0,0,.25); display: none; z-index: 5; }
+  #toast.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
+  #toast.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad); }
+  h2 { font: 600 18px Georgia, serif; margin: 22px 0 10px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .rules li { margin-bottom: 6px; }
+  @media (max-width: 640px) { main { padding: 14px; } header { padding: 12px 14px; } th, td { padding: 8px 10px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>LibraTrack</h1>
+    <small>Library Management System</small>
+  </div>
+  <div class="clock">
+    <span>Library time: <b id="now">-</b></span>
+    <button class="btn ghost small" style="color:inherit;border-color:currentColor" onclick="clock({hours:1})">+1 hour</button>
+    <button class="btn ghost small" style="color:inherit;border-color:currentColor" onclick="clock({days:1})">+1 day</button>
+    <button class="btn ghost small" style="color:inherit;border-color:currentColor" onclick="clock({days:7})">+7 days</button>
+    <button class="btn ghost small" style="color:inherit;border-color:currentColor" onclick="clock({days:30})">+30 days</button>
+  </div>
+</header>
+<main>
+  <nav id="tabs"></nav>
+  <div class="actor">
+    <label for="actor">Acting as member</label>
+    <select id="actor" onchange="actorChanged()"></select>
+    <span id="actorInfo" class="muted"></span>
+  </div>
+  <section id="view"></section>
+</main>
+<div id="toast"></div>
+
+<script>
+const TABS = [['catalog','Catalogue'],['loans','Loans & returns'],['reservations','Reservations'],['fines','Fines'],['members','Members']];
+let S = null, tab = 'catalog', actorId = null, query = '';
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '₹' + Number(n).toFixed(2);
+const when = s => String(s).replace('T', ' ').slice(0, 16);
+
+async function api(path, data) {
+  const opt = data ? { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data) } : {};
+  const r = await fetch(path, opt);
+  return r.json();
+}
+async function refresh() {
+  S = await api('/api/state');
+  if (actorId === null && S.members.length) actorId = S.members[0].id;
+  render();
+}
+async function act(path, data) {
+  const r = await api(path, data);
+  toast(r.message, r.ok);
+  await refresh();
+}
+const clock = d => act('/api/clock', d);
+
+let toastTimer;
+function toast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = ok ? 'ok' : 'bad'; t.style.display = 'block';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.style.display = 'none', 5200);
+}
+function actorChanged() { actorId = Number(document.getElementById('actor').value); render(); }
+function setTab(t) { tab = t; render(); }
+function onSearch(v) {
+  query = v; render();
+  const el = document.getElementById('q');
+  el.focus(); el.setSelectionRange(v.length, v.length);
+}
+const actor = () => S.members.find(m => m.id === actorId);
+
+function render() {
+  document.getElementById('now').textContent = when(S.now) + ' (' + new Date(S.now).toLocaleDateString('en-US', {weekday:'short'}) + ')';
+  document.getElementById('tabs').innerHTML = TABS.map(([k, l]) => `<button class="${k === tab ? 'active' : ''}" onclick="setTab('${k}')">${l}</button>`).join('');
+  const sel = document.getElementById('actor');
+  sel.innerHTML = S.members.map(m => `<option value="${m.id}" ${m.id === actorId ? 'selected' : ''}>${esc(m.name)} (${m.tier})</option>`).join('');
+  const a = actor();
+  document.getElementById('actorInfo').textContent = a ? `${a.loans}/${a.limit} loans · grace ${a.graceDays}d · unpaid ${money(a.unpaid)}` : '';
+  document.getElementById('view').innerHTML = { catalog, loans, reservations, fines, members }[tab]();
+}
+
+function catalog() {
+  const q = query.toLowerCase();
+  const rows = S.books.filter(b => !q || (b.title + b.author + b.category).toLowerCase().includes(q));
+  return `<div class="toolbar"><input id="q" type="search" placeholder="Search title, author or category" value="${esc(query)}" oninput="onSearch(this.value)"></div>
+  <div class="panel"><table><thead><tr><th>Title</th><th>Category</th><th>Availability</th><th>Loan / fine</th><th>Issue window</th><th></th></tr></thead><tbody>` +
+  (rows.map(b => `<tr>
+    <td><b>${esc(b.title)}</b><br><span class="muted">${esc(b.author)}</span></td>
+    <td><span class="tag">${b.category}</span></td>
+    <td>${b.available > 0 ? `<span class="tag ok">${b.available}/${b.total} in</span>` : `<span class="tag bad">All out</span>`}${b.queue ? `<br><span class="muted">${b.queue} on hold</span>` : ''}</td>
+    <td>${b.loanDays} days<br><span class="muted">${money(b.finePerDay)}/day late</span></td>
+    <td class="muted">${b.window}</td>
+    <td style="white-space:nowrap"><button class="btn small" onclick="act('/api/issue',{memberId:actorId,bookId:${b.id}})">Issue</button>
+      <button class="btn small ghost" onclick="act('/api/reserve',{memberId:actorId,bookId:${b.id}})">Reserve</button></td></tr>`).join('')
+    || `<tr><td colspan="6" class="empty">No books match.</td></tr>`) + `</tbody></table></div>`;
+}
+
+function loans() {
+  const mine = S.loans.filter(l => l.memberId === actorId);
+  const body = mine.length ? mine.map(l => `<tr>
+      <td><input type="checkbox" class="ret" value="${l.id}"></td>
+      <td><b>${esc(l.book)}</b></td><td>${when(l.issuedAt)}</td><td>${l.due}</td>
+      <td>${l.overdue ? `<span class="tag bad">Overdue</span>` : `<span class="tag ok">On time</span>`}</td>
+      <td>${l.projectedFine > 0 ? `<b>${money(l.projectedFine)}</b> <span class="muted">(${l.projectedDays} chargeable days)</span>` : '<span class="muted">-</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">${esc(actor()?.name)} has no active loans.</td></tr>`;
+  return `<div class="toolbar"><button class="btn" onclick="returnSelected()">Return selected</button>
+    <span class="muted">Tick three or more books to return together and earn the bulk-return waiver on overdue ones.</span></div>
+    <div class="panel"><table><thead><tr><th></th><th>Book</th><th>Issued</th><th>Due</th><th>Status</th><th>Fine if returned now</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+function returnSelected() {
+  const ids = [...document.querySelectorAll('.ret:checked')].map(c => c.value).join(',');
+  act('/api/return', { ids });
+}
+
+function reservations() {
+  const body = S.reservations.length ? S.reservations.sort((x, y) => x.book.localeCompare(y.book) || x.position - y.position).map(r => `<tr>
+    <td><b>${esc(r.book)}</b></td><td>#${r.position}</td><td>${esc(r.member)}</td><td><span class="tag">${r.tier}</span></td><td>${when(r.requestedAt)}</td>
+    <td><button class="btn small ghost" onclick="act('/api/cancel',{id:${r.id}})">Cancel</button></td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">No active reservations. Issue a single-copy book to someone, then reserve it with two members of different tiers.</td></tr>`;
+  return `<p class="muted">The queue is ordered by membership tier first (VIP, then PREMIUM, then BASIC), then by request time.</p>
+    <div class="panel"><table><thead><tr><th>Book</th><th>Queue</th><th>Member</th><th>Tier</th><th>Requested</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function fines() {
+  const body = S.fines.length ? S.fines.map(f => `<tr>
+    <td>#${f.id}</td><td>${esc(f.member)}</td><td>${f.days}</td><td>${money(f.gross)}</td>
+    <td>${f.waiver}%<br><span class="muted">${esc(f.waiverDetails)}</span></td><td><b>${money(f.net)}</b></td>
+    <td>${f.paid ? '<span class="tag ok">Paid</span>' : `<button class="btn small" onclick="act('/api/pay',{id:${f.id}})">Pay</button>`}</td></tr>`).join('')
+    : `<tr><td colspan="7" class="empty">No fines yet. Issue a book, advance the clock past its due date, then return it.</td></tr>`;
+  return `<div class="panel"><table><thead><tr><th>Fine</th><th>Member</th><th>Chargeable days</th><th>Gross</th><th>Waivers</th><th>Net</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function members() {
+  return `<div class="toolbar"><input id="newName" placeholder="New member name">
+    <select id="newTier"><option>BASIC</option><option>PREMIUM</option><option>VIP</option></select>
+    <button class="btn" onclick="act('/api/member',{name:document.getElementById('newName').value,tier:document.getElementById('newTier').value})">Register</button></div>
+  <div class="panel"><table><thead><tr><th>Member</th><th>Tier</th><th>Loans</th><th>Late returns</th><th>Unpaid fines</th></tr></thead><tbody>` +
+  S.members.map(m => `<tr><td><b>${esc(m.name)}</b></td><td><span class="tag">${m.tier}</span></td><td>${m.loans}/${m.limit}</td><td>${m.lateReturns}</td><td>${money(m.unpaid)}</td></tr>`).join('') + `</tbody></table></div>`;
+}
+
+refresh();
+</script>
+</body>
+</html>
