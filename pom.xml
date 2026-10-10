@@ -18,8 +18,8 @@
     <jacoco.version>0.8.12</jacoco.version>
 
     <!-- SonarQube Cloud: replace these two values with yours (see docs/SONARCLOUD_GUIDE.md) -->
-    <sonar.organization>YOUR_SONAR_ORG_KEY</sonar.organization>
-    <sonar.projectKey>YOUR_SONAR_ORG_KEY_libratrack</sonar.projectKey>
+    <sonar.organization>Anubhav0778</sonar.organization>
+    <sonar.projectKey>anubhav0778</sonar.projectKey>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
